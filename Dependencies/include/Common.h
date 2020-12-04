@@ -12,12 +12,19 @@
 #include <glm.hpp>
 #include <gtc/quaternion.hpp>
 #include <gtc/matrix_transform.hpp>
+#include <gtx/string_cast.hpp>
+#include <gtx/quaternion.hpp>
+
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 #include <cstdlib>
 #include <cstdio>
 
 #include <iostream>
 #include <vector>
+#include <string>
 using namespace std;
 
 

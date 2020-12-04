@@ -1,6 +1,6 @@
 
 #include <Common.h>
-
+#include "KeyFrames.h"
 
 #pragma region hidethis
 static const struct
@@ -15,7 +15,7 @@ static const struct
         };
 
 static const char* vertex_shader_text =
-        "#version 110\n"
+        "#version 330\n"
         "uniform mat4 MVP;\n"
         "attribute vec3 vCol;\n"
         "attribute vec2 vPos;\n"
@@ -27,7 +27,7 @@ static const char* vertex_shader_text =
         "}\n";
 
 static const char* fragment_shader_text =
-        "#version 110\n"
+        "#version 330\n"
         "varying vec3 color;\n"
         "void main()\n"
         "{\n"
@@ -51,6 +51,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 #pragma endregion
 int main()
 {
+#pragma region Window n OpenGL stuff
     GLFWwindow* window;
     GLuint vertex_buffer, vertex_shader, fragment_shader, program;
     GLint mvp_location, vpos_location, vcol_location;
@@ -62,7 +63,6 @@ int main()
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-
     window = glfwCreateWindow(640, 480, "Simple example", nullptr, nullptr);
     if (!window)
     {
@@ -74,6 +74,7 @@ int main()
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     glfwMakeContextCurrent(window);
+
     gladLoadGL();
     glfwSwapInterval(1);
 
@@ -106,7 +107,7 @@ int main()
     glEnableVertexAttribArray(vcol_location);
     glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
                           sizeof(vertices[0]), (void*) (sizeof(float) * 2));
-    float zoom = 0.01f;
+
 
     glClearColor(0.14f, 0.0f, 0.05f, 1.0f);
 
@@ -114,31 +115,101 @@ int main()
     glfwGetWindowSize(window, &width, &height);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsClassic();
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+
+    float zoom = 0.01f;
+
+#pragma endregion
+
+
+    // keyframes
+    KeyFrames kfs;
+    kfs.pushVec3(make_pair(glm::vec3(0,0,0), 0), 't');
+    kfs.pushVec3(make_pair(glm::vec3(0,1,0), 5), 't');
+    kfs.pushVec3(make_pair(glm::vec3(1,1,0), 15), 't');
+    kfs.pushVec3(make_pair(glm::vec3(2,0,0), 20), 't');
+    kfs.pushVec3(make_pair(glm::vec3(0,1,0), 25), 't');
+    kfs.pushVec3(make_pair(glm::vec3(1,4,0), 29), 't');
+    kfs.pushVec3(make_pair(glm::vec3(0,5,0), 36), 't');
+    kfs.pushVec3(make_pair(glm::vec3(8,1,0), 38), 't');
+    kfs.pushVec3(make_pair(glm::vec3(1,11,0), 40), 't');
+    kfs.pushVec3(make_pair(glm::vec3(12,0,0), 45), 't');
+    kfs.pushVec3(make_pair(glm::vec3(0,12,0), 50), 't');
+
+    kfs.pushVec3(make_pair(glm::vec3(0,0, 0.0f), 0), 'r');
+    kfs.pushVec3(make_pair(glm::vec3(0,0,45.0f), 30), 'r');
+    kfs.pushVec3(make_pair(glm::vec3(0,0,90.0f), 50), 'r');
+
+    kfs.pushVec3(make_pair(glm::vec3(1,1,1), 0), 's');
+
+    kfs.pushVec3(make_pair(glm::vec3(3,3,3), 6), 's');
+
     while (!glfwWindowShouldClose(window))
     {
         glm::mat4 m, p, mvp;
 
         glClear(GL_COLOR_BUFFER_BIT);
-        m = glm::mat4 (1);
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+
+        {
+            bool run_animation = false;
+            ImGui::Begin("Hello, interpolations!");
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::Checkbox("Interpolate", &run_animation);
+            if(run_animation)
+                kfs.startPlaying();
+
+            ImGui::End();
+        }
+
+
+        // Rendering
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        if(!kfs.IsPlaying())
+            m = glm::mat4 (1);
+        else m = kfs.getTransform();
 
         int w, h;
         glfwGetWindowSize(window, &w, &h);
-        //m = glm::rotate(m, (float) glfwGetTime(), glm::vec3(0, 0, 1));
-        p = glm::ortho(   -(float)w * zoom/2.0f,
-                           (float)w * zoom/2.0f,
-                          -(float)h * zoom/2.0f,
-                           (float)h * zoom/2.0f);
+        if(h != height || w != width) { string message = "The new canvas has ";  cout << message.append(to_string(h)).append(" h, ").append(to_string(w)).append(" w\n"); width = w; height = h; }
+        p = glm::ortho(-(float)w * zoom/2.0f,(float)w * zoom/2.0f,-(float)h * zoom/2.0f,(float)h * zoom/2.0f);
         mvp = p * m;
+
         glUseProgram(program);
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, &mvp[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
+
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    glfwDestroyWindow(window);
+    // Cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
+    glfwDestroyWindow(window);
     glfwTerminate();
+
     exit(EXIT_SUCCESS);
 }
  

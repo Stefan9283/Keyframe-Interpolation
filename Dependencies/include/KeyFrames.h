@@ -11,19 +11,25 @@
 
 class KeyFrames {
 
-    vector<pair<glm::vec3, float>> pos;
-    vector<pair<glm::vec3, float>> scal;
-    vector<pair<glm::quat, float>> rot;
+private:
 
-    void pushVec3(pair<glm::vec3, float> keyframe, char type);
-
-    glm::mat4 getTransform(float time);
+    vector<pair<glm::vec3, double>> pos;
+    vector<pair<glm::vec3, double>> scal;
+    vector<pair<glm::quat, double>> rot;
 
 
-    glm::vec3 interpPosition(float time);
-    glm::vec3 interpScale(float time);
-    glm::quat interpRotation(float time);
+    glm::vec3 interpPosition(double time);
+    glm::vec3 interpScale(double time);
+    glm::quat interpRotation(double time);
+    double last_time;
+    double internal_time;
+    bool playing = false;
 
+public:
+    void pushVec3(pair<glm::vec3, double> keyframe, char type);
+    glm::mat4 getTransform();
+    void startPlaying();
+    bool IsPlaying();
 };
 
 #endif //INTERPOLATIONS_KEYFRAMES_H
