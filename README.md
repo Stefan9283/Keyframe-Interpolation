@@ -1,9 +1,11 @@
 # Keyframe-Interpolation
+ 
+**TODO:**
 
-TODO:
-    keep window aspect ratio
-    add keyframes
-    add interpolation funcs
-    add keyframe getter
+   ~~keep window aspect ratio~~ <br />
+   add keyframes <br />
+   add interpolation funcs <br />
+   add keyframe getter <br />
+
 
 Base code taken from the GLFW Documentation

@@ -1,13 +1,6 @@
 
-#include <glad/glad.h>
-//#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
+#include <Common.h>
 
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-
-#include <cstdlib>
-#include <cstdio>
 
 #pragma region hidethis
 static const struct
@@ -51,6 +44,10 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+}
 #pragma endregion
 int main()
 {
@@ -74,10 +71,10 @@ int main()
     }
 
     glfwSetKeyCallback(window, key_callback);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     glfwMakeContextCurrent(window);
     gladLoadGL();
-    //gladLoadGL(glfwGetProcAddress);
     glfwSwapInterval(1);
 
     // NOTE: OpenGL error checks have been omitted for brevity
@@ -109,26 +106,29 @@ int main()
     glEnableVertexAttribArray(vcol_location);
     glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
                           sizeof(vertices[0]), (void*) (sizeof(float) * 2));
+    float zoom = 0.01f;
 
-    float zoom = 5.0f;
+    glClearColor(0.14f, 0.0f, 0.05f, 1.0f);
+
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     while (!glfwWindowShouldClose(window))
     {
-        float ratio;
-        int width, height;
         glm::mat4 m, p, mvp;
 
-        glfwGetFramebufferSize(window, &width, &height);
-        ratio = width / (float) height;
-
-        glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
-
         m = glm::mat4 (1);
-        m = glm::rotate(m, (float) glfwGetTime(), glm::vec3(0, 0, 1));
-        p = glm::ortho(-zoom, zoom, -zoom, zoom, 0.0f, 1.0f);
-        mvp = p * m;
 
+        int w, h;
+        glfwGetWindowSize(window, &w, &h);
+        //m = glm::rotate(m, (float) glfwGetTime(), glm::vec3(0, 0, 1));
+        p = glm::ortho(   -(float)w * zoom/2.0f,
+                           (float)w * zoom/2.0f,
+                          -(float)h * zoom/2.0f,
+                           (float)h * zoom/2.0f);
+        mvp = p * m;
         glUseProgram(program);
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, &mvp[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 3);

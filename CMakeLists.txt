@@ -68,7 +68,7 @@ add_executable(${PROJECT_NAME}
 							${PROJECT_HEADERS}
 							${PROJECT_SHADERS}
 							${PROJECT_GEOMETRY_SHADERS}
-							${IMGUI})
+							${IMGUI} Dependencies/include/KeyFrames.h Dependencies/include/Common.h Dependencies/source/KeyFrames.cpp)
 
 
 target_link_libraries(${PROJECT_NAME}
