@@ -7,13 +7,12 @@
 void KeyFrames::startPlaying() {
     playing = true;
     internal_time = glfwGetTime();
+    acceleration = 0.01f;
+    velocity = 0.0f;
 }
-
 bool KeyFrames::IsPlaying() const {
     return playing;
 }
-
-
 void KeyFrames::pushVec3(std::pair<glm::vec3, double> keyframe, char type) {
     if(type == 's') scal.push_back(keyframe);
     else if(type == 't') pos.push_back(keyframe);
@@ -104,7 +103,7 @@ glm::quat KeyFrames::interpRotation(double time) {
 }
 
 // Cubic Spline Interpolation
-glm::mat4 KeyFrames::getTransform() {
+glm::mat4 KeyFrames::getCubicTransform() {
     double time = glfwGetTime() - internal_time;
     glm::mat4 t = glm::mat4(1), r= glm::mat4(1), s= glm::mat4(1);
     s = glm::scale(glm::mat4(1), cubicInterpScale(time));
@@ -114,8 +113,20 @@ glm::mat4 KeyFrames::getTransform() {
     glm::mat4 model = t * r * s;
     return model;
 }
+
 float cubicInterp(float f0, float f1, float d0, float d1, float p) {
-    assert(p>=0 && p<=1);
+    //assert(p>=0 && p<=1);
+    // f(x) = a * x ^ 3 + b * x ^ 2 + c * x + d
+    float d = f0;
+    float c = d0;
+    float a = d1 - d0 - 2 * (f1 - c - d);
+    float b = f1 - a - d - c;
+
+    return a * (p * p * p) + b * (p * p) + c * (p) + d;
+}
+float cubicAccelerationFunc(float p, float d0, float d1) {
+    //assert(p>=0 && p<=1);
+    float f0 = 0, f1 = 1;
     // f(x) = a * x ^ 3 + b * x ^ 2 + c * x + d
     float d = f0;
     float c = d0;
@@ -167,6 +178,9 @@ glm::vec3 KeyFrames::cubicInterpPosition(double time) {
         ds = d0;
     if(index + 1 == pos.size() - 1)
         df = d1;
+
+
+    a = cubicAccelerationFunc((float)a, ds, df);
 
     return cubInterpVec3(pos[index].first, pos[index+1].first, ds, df, (float)a);
 }
@@ -258,10 +272,6 @@ glm::vec3 KeyFrames::SpringInterpPosition(double time) {
     if(pos.empty()) return CubicPos;
     if(pos.size() == 1) return CubicPos;
 
-    // spring constants
-    float m = 1, c = 5;
-    float k = 100;
-
     float delta = c / m / 2.0f;
     float omega = glm::sqrt(k/m);
 
@@ -279,10 +289,6 @@ glm::vec3 KeyFrames::SpringInterpScale(double time) {
 
     if(scal.empty()) return CubicScal;
     if(scal.size() == 1) return CubicScal;
-
-    // spring constants
-    float m = 1, c = 5;
-    float k = 100;
 
     float delta = c / m / 2.0f;
     float omega = glm::sqrt(k/m);
@@ -302,9 +308,6 @@ glm::quat KeyFrames::SpringInterpRotation(double time) {
     if(rot.empty()) return CubicRot;
     if(rot.size() == 1) return CubicRot;
 
-    // spring constants
-    float m = 1, c = 5;
-    float k = 100;
 
     float delta = c / m / 2.0f;
     float omega = glm::sqrt(k/m);
@@ -318,4 +321,74 @@ glm::quat KeyFrames::SpringInterpRotation(double time) {
 
     return sol;
 }
+
+glm::mat4 KeyFrames::getTransform() {
+    glm::vec3 t, s;
+    glm::quat r;
+
+    double time = glfwGetTime() - internal_time;
+
+    switch (tmode) {
+        case 0:
+            t = interpPosition(time);
+            if(time > last_time) playing = false;
+            break;
+        case 1:
+            t = cubicInterpPosition(time);
+            if(time > last_time) playing = false;
+            break;
+        case 2:
+            if(!pos.empty() && pos[pos.size() - 1].second < time)
+            t = SpringInterpPosition(time);
+            else t = cubicInterpPosition(time);
+            if(time > last_time + dampTime) {
+                playing = false;
+            }
+            break;
+    }
+    switch (rmode) {
+        case 0:
+            r = interpRotation(time);
+            if(time > last_time) playing = false;
+            break;
+        case 1:
+            r = cubicInterpRotation(time);
+            if(time > last_time) playing = false;
+            break;
+        case 2:
+            if(!rot.empty() && rot[rot.size() - 1].second < time)
+            r = SpringInterpRotation(time);
+            else r = cubicInterpRotation(time);
+            if(time > last_time + dampTime) {
+                playing = false;
+            }
+            break;
+    }
+    switch (smode) {
+        case 0:
+            s = interpScale(time);
+            if(time > last_time) playing = false;
+            break;
+        case 1:
+            s = cubicInterpScale(time);
+            if(time > last_time) playing = false;
+            break;
+        case 2:
+            if(!scal.empty() && scal[scal.size() - 1].second < time)
+            s = SpringInterpScale(time);
+            else s = cubicInterpScale(time);
+            if(time > last_time + dampTime) {
+                playing = false;
+            }
+            break;
+    }
+
+    return glm::translate(glm::mat4(1), t) * glm::mat4_cast(r) * glm::scale(glm::mat4(1), s);
+}
+
+
+
+
+
+
 

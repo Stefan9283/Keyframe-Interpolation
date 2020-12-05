@@ -50,7 +50,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 }
 #pragma endregion
 
-
 int main()
 {
 #pragma region Window n OpenGL stuff
@@ -168,6 +167,22 @@ int main()
         {
             bool run_animation = false;
             ImGui::Begin("Hello, interpolations!");
+
+            ImGui::Text("d0 - first keyframe derivative\nd1 - last keyframe derivative\nfor the keyframes in-between defaults are 0 and 0\n");
+            ImGui::SliderFloat("d0", &kfs.d0, -100.0f, 100.0f);
+            ImGui::SliderFloat("d1", &kfs.d1, -100.0f, 100.0f);
+            ImGui::Text("m - attached mass\nk - spring stiffness\nc - damper coefficient\n");
+            ImGui::SliderFloat("m", &kfs.m, 0.0f, 100.0f);
+            ImGui::SliderFloat("k", &kfs.k, 0.01f, 1000.0f);
+            ImGui::SliderFloat("c", &kfs.c, -10.0f, 10.0f);
+
+            ImGui::Text("Available modes\n 0 - linear interpolation\n 1 - cubic spline interpolation\n 2 - mass-spring-damper interpolation\n");
+            ImGui::SliderInt("Translation Mode", &kfs.tmode, 0, 2);
+            ImGui::SliderInt("Rotation Mode", &kfs.rmode, 0, 2);
+            ImGui::SliderInt("Scaling Mode", &kfs.smode, 0, 2);
+
+
+
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             if(!kfs.IsPlaying())
                 ImGui::Checkbox("Interpolate", &run_animation);
@@ -184,7 +199,7 @@ int main()
 
         if(!kfs.IsPlaying())
             m = glm::mat4 (1);
-        else m = kfs.getSpringTransform();
+        else m = kfs.getTransform();
 
         int w, h;
         glfwGetWindowSize(window, &w, &h);
