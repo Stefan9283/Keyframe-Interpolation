@@ -49,6 +49,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 #pragma endregion
+
+
 int main()
 {
 #pragma region Window n OpenGL stuff
@@ -63,7 +65,7 @@ int main()
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    window = glfwCreateWindow(640, 480, "Simple example", nullptr, nullptr);
+    window = glfwCreateWindow(1000, 1000, "Simple example", nullptr, nullptr);
     if (!window)
     {
         glfwTerminate();
@@ -118,12 +120,9 @@ int main()
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -133,28 +132,28 @@ int main()
 
 #pragma endregion
 
-
-    // keyframes
+#pragma region keyframes
     KeyFrames kfs;
-    kfs.pushVec3(make_pair(glm::vec3(0,0,0), 0), 't');
-    kfs.pushVec3(make_pair(glm::vec3(0,1,0), 5), 't');
-    kfs.pushVec3(make_pair(glm::vec3(1,1,0), 15), 't');
-    kfs.pushVec3(make_pair(glm::vec3(2,0,0), 20), 't');
-    kfs.pushVec3(make_pair(glm::vec3(0,1,0), 25), 't');
-    kfs.pushVec3(make_pair(glm::vec3(1,4,0), 29), 't');
-    kfs.pushVec3(make_pair(glm::vec3(0,5,0), 36), 't');
-    kfs.pushVec3(make_pair(glm::vec3(8,1,0), 38), 't');
-    kfs.pushVec3(make_pair(glm::vec3(1,11,0), 40), 't');
-    kfs.pushVec3(make_pair(glm::vec3(12,0,0), 45), 't');
-    kfs.pushVec3(make_pair(glm::vec3(0,12,0), 50), 't');
+    kfs.pushVec3(make_pair(glm::vec3(0,4,0), 0), 't');
+    kfs.pushVec3(make_pair(glm::vec3(0,-4,0), 2), 't');
+    kfs.pushVec3(make_pair(glm::vec3(6,0,0), 4), 't');
+    kfs.pushVec3(make_pair(glm::vec3(6,4,0), 6), 't');
+    kfs.pushVec3(make_pair(glm::vec3(0,0,0), 8), 't');
+    kfs.pushVec3(make_pair(glm::vec3(0,4,0), 10), 't');
+
 
     kfs.pushVec3(make_pair(glm::vec3(0,0, 0.0f), 0), 'r');
-    kfs.pushVec3(make_pair(glm::vec3(0,0,45.0f), 30), 'r');
-    kfs.pushVec3(make_pair(glm::vec3(0,0,90.0f), 50), 'r');
+    kfs.pushVec3(make_pair(glm::vec3(0,0,45.0f), 2), 'r');
+    kfs.pushVec3(make_pair(glm::vec3(0,0,90.0f), 3), 'r');
+    kfs.pushVec3(make_pair(glm::vec3(0,0, 0.0f), 4), 'r');
 
-    kfs.pushVec3(make_pair(glm::vec3(1,1,1), 0), 's');
+    kfs.pushVec3(make_pair(glm::vec3(5), 0), 's');
+    kfs.pushVec3(make_pair(glm::vec3(1), 1), 's');
+    kfs.pushVec3(make_pair(glm::vec3(3), 2), 's');
+    kfs.pushVec3(make_pair(glm::vec3(1), 3), 's');
+    kfs.pushVec3(make_pair(glm::vec3(5), 4), 's');
 
-    kfs.pushVec3(make_pair(glm::vec3(3,3,3), 6), 's');
+#pragma endregion
 
     while (!glfwWindowShouldClose(window))
     {
@@ -166,12 +165,12 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-
         {
             bool run_animation = false;
             ImGui::Begin("Hello, interpolations!");
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::Checkbox("Interpolate", &run_animation);
+            if(!kfs.IsPlaying())
+                ImGui::Checkbox("Interpolate", &run_animation);
             if(run_animation)
                 kfs.startPlaying();
 
@@ -185,7 +184,7 @@ int main()
 
         if(!kfs.IsPlaying())
             m = glm::mat4 (1);
-        else m = kfs.getTransform();
+        else m = kfs.getSpringTransform();
 
         int w, h;
         glfwGetWindowSize(window, &w, &h);
