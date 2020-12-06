@@ -37,8 +37,9 @@ private:
     bool playing = false;
 
 public:
-    double velocity, tr_acceleration, rot_acceleration;
+    double velocity, tr_acceleration, rot_acceleration, scal_acceleration;
     pair<glm::vec3, double> last_position;
+    pair<glm::vec3, double> last_scaling;
     pair<glm::quat, double> last_rotation;
     float d0s = 0, d1s = 0;
     float d0t = 0, d1t = 0;

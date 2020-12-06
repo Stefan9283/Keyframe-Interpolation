@@ -201,8 +201,6 @@ float cubicAccelerationFunc(float p, float d0, float d1) {
     return a * (p * p * p) + b * (p * p) + c * (p) + d;
 }
 float quinticAccelerationFunc(float f0, float f1, float p, float d0, float d1, float dd0, float dd1) {
-
-
     float
     delta = 1,
     d = (dd0/2) * delta * delta,
@@ -219,7 +217,6 @@ float quinticAccelerationFunc(float f0, float f1, float p, float d0, float d1, f
     return res;
 }
 glm::vec3 cubInterpVec3(glm::vec3 v0, glm::vec3 v1, float d0, float d1, float p) {
-
     float x, y, z;
     x = cubicInterp(v0.x, v1.x, d0, d1, p);
     y = cubicInterp(v0.y, v1.y, d0, d1, p);
@@ -250,7 +247,6 @@ glm::vec3 KeyFrames::cubicInterpPosition(double time) {
         if(pos[i+1].second > time)
             break;
     }
-
 
     double a = (time - pos[index].second) / (pos[index+1].second - pos[index].second);
 
@@ -302,9 +298,20 @@ glm::vec3 KeyFrames::cubicInterpScale(double time) {
     if(index + 1 == scal.size() - 1)
         df = d1s;
 
-    a = cubicAccelerationFunc((float)a, ds, df);
+    if(index != scal.size() - 2)
+        a = cubicAccelerationFunc((float)a, ds, df);
+    else a = quinticAccelerationFunc(scal[index].second, scal[index+1].second, (float)a, 0, 3, 1, 1);
 
-    return cubInterpVec3(scal[index].first, scal[index+1].first, ds, df, (float)a);
+    glm::vec3 res = cubInterpVec3(scal[index].first, scal[index+1].first, ds, df, (float)a);
+
+    if(time != last_scaling.second) {
+        scal_acceleration = glm::length(res - last_scaling.first)/(time - last_scaling.second);
+
+        last_scaling.first = res;
+        last_scaling.second = time;
+    }
+
+    return res;
 }
 glm::quat KeyFrames::cubicInterpRotation(double time) {
     if(rot.empty())
@@ -407,7 +414,7 @@ glm::vec3 KeyFrames::SpringInterpScale(double time) {
     time = glfwGetTime() - internal_time - scal[scal.size() - 1].second;
 
     glm::vec3 sol = CubicScal + glm::normalize(CubicScal - scal[scal.size() - 2].first)
-                               * (float)(glm::exp(- delta * time) * glm::sin(omega * time));
+                               * (float)(scal_acceleration * glm::exp(- delta * time) * glm::sin(omega * time));
 
     return sol;
 }

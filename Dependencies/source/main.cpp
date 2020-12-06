@@ -146,7 +146,7 @@ int main()
     kfs.pushVec3(make_pair(glm::vec3(1), 1), 's');
     kfs.pushVec3(make_pair(glm::vec3(1), 3), 's');
     kfs.pushVec3(make_pair(glm::vec3(5), 4), 's');
-    kfs.pushVec3(make_pair(glm::vec3(3), 2), 's');
+    kfs.pushVec3(make_pair(glm::vec3(3), 5), 's');
  #pragma endregion
 
     while (!glfwWindowShouldClose(window))
