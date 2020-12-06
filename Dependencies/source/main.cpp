@@ -134,25 +134,20 @@ int main()
 #pragma region keyframes
     KeyFrames kfs;
     kfs.pushVec3(make_pair(glm::vec3(0,4,0), 0), 't');
-    kfs.pushVec3(make_pair(glm::vec3(0,-4,0), 2), 't');
-    kfs.pushVec3(make_pair(glm::vec3(6,0,0), 4), 't');
-    kfs.pushVec3(make_pair(glm::vec3(6,4,0), 6), 't');
-    kfs.pushVec3(make_pair(glm::vec3(0,0,0), 8), 't');
-    kfs.pushVec3(make_pair(glm::vec3(0,4,0), 10), 't');
-
-
+    kfs.pushVec3(make_pair(glm::vec3(0,-4,0), 1), 't');
+    kfs.pushVec3(make_pair(glm::vec3(6,0,0), 3), 't');
+    kfs.pushVec3(make_pair(glm::vec3(6,4,0), 5), 't');
+    kfs.pushVec3(make_pair(glm::vec3(0,0,0), 6), 't');
     kfs.pushVec3(make_pair(glm::vec3(0,0, 0.0f), 0), 'r');
     kfs.pushVec3(make_pair(glm::vec3(0,0,45.0f), 2), 'r');
     kfs.pushVec3(make_pair(glm::vec3(0,0,90.0f), 3), 'r');
     kfs.pushVec3(make_pair(glm::vec3(0,0, 0.0f), 4), 'r');
-
     kfs.pushVec3(make_pair(glm::vec3(5), 0), 's');
     kfs.pushVec3(make_pair(glm::vec3(1), 1), 's');
-    kfs.pushVec3(make_pair(glm::vec3(3), 2), 's');
     kfs.pushVec3(make_pair(glm::vec3(1), 3), 's');
     kfs.pushVec3(make_pair(glm::vec3(5), 4), 's');
-
-#pragma endregion
+    kfs.pushVec3(make_pair(glm::vec3(3), 2), 's');
+ #pragma endregion
 
     while (!glfwWindowShouldClose(window))
     {
@@ -164,41 +159,8 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        {
-            bool run_animation = false;
-            ImGui::Begin("Hello, interpolations!");
-
-            ImGui::Text("d0 - first keyframe derivative\nd1 - last keyframe derivative\nfor the keyframes in-between defaults are 0 and 0\n");
-            ImGui::SliderFloat("d0", &kfs.d0, -100.0f, 100.0f);
-            ImGui::SliderFloat("d1", &kfs.d1, -100.0f, 100.0f);
-            ImGui::Text("m - attached mass\nk - spring stiffness\nc - damper coefficient\n");
-            ImGui::SliderFloat("m", &kfs.m, 0.0f, 100.0f);
-            ImGui::SliderFloat("k", &kfs.k, 0.01f, 1000.0f);
-            ImGui::SliderFloat("c", &kfs.c, -10.0f, 10.0f);
-
-            ImGui::Text("Available modes\n 0 - linear interpolation\n 1 - cubic spline interpolation\n 2 - mass-spring-damper interpolation\n");
-            ImGui::SliderInt("Translation Mode", &kfs.tmode, 0, 2);
-            ImGui::SliderInt("Rotation Mode", &kfs.rmode, 0, 2);
-            ImGui::SliderInt("Scaling Mode", &kfs.smode, 0, 2);
-
-
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            if(!kfs.IsPlaying())
-                ImGui::Checkbox("Interpolate", &run_animation);
-            if(run_animation)
-                kfs.startPlaying();
-
-            ImGui::End();
-        }
-
-
-        // Rendering
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
         if(!kfs.IsPlaying())
-            m = glm::mat4 (1);
+            m = glm::scale(glm::mat4(1), glm::vec3(3));
         else m = kfs.getTransform();
 
         int w, h;
@@ -210,6 +172,49 @@ int main()
         glUseProgram(program);
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, &mvp[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
+
+
+
+        {
+            bool run_animation = false;
+            ImGui::Begin("Hello, interpolations!");
+
+            ImGui::Text("d0 - first keyframe derivative\nd1 - last keyframe derivative\nfor the keyframes in-between defaults are 0 and 0\n");
+            ImGui::SliderFloat("d0t", &kfs.d0t, -1.0f, 1.0f);
+            ImGui::SliderFloat("d1t", &kfs.d1t, -1.0f, 1.0f);
+            ImGui::SliderFloat("d0r", &kfs.d0r, -1.0f, 1.0f);
+            ImGui::SliderFloat("d1r", &kfs.d1r, -1.0f, 1.0f);
+            ImGui::SliderFloat("d0s", &kfs.d0s, -1.0f, 1.0f);
+            ImGui::SliderFloat("d1s", &kfs.d1s, -1.0f, 1.0f);
+
+            ImGui::Text("m - attached mass\nk - spring stiffness\nc - damper coefficient\n");
+            ImGui::SliderFloat("ks", &kfs.ks, 0.01f, 1000.0f);
+            ImGui::SliderFloat("cs", &kfs.cs, -10.0f, 20.0f);
+            ImGui::SliderFloat("kr", &kfs.kr, 0.01f, 1000.0f);
+            ImGui::SliderFloat("cr", &kfs.cr, -10.0f, 20.0f);
+            ImGui::SliderFloat("kt", &kfs.kt, 0.01f, 1000.0f);
+            ImGui::SliderFloat("ct", &kfs.ct, -10.0f, 20.0f);
+
+            ImGui::Text("Available modes\n 0 - linear interpolation\n 1 - cubic spline interpolation\n 2 - mass-spring-damper interpolation\n");
+            ImGui::SliderInt("Translation Mode", &kfs.tmode, 0, 2);
+            ImGui::SliderInt("Rotation Mode", &kfs.rmode, 0, 2);
+            ImGui::SliderInt("Scaling Mode", &kfs.smode, 0, 2);
+
+
+
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            //if(!kfs.IsPlaying())
+            ImGui::Checkbox("Interpolate", &run_animation);
+            if(run_animation)
+                kfs.startPlaying();
+
+            ImGui::End();
+        }
+
+
+        // Rendering
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 
         glfwSwapBuffers(window);

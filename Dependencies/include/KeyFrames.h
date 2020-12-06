@@ -28,23 +28,31 @@ private:
     glm::quat cubicInterpRotation(double time);
 
     // Linear Interpolation
-    glm::vec3 interpPosition(double time);
-    glm::vec3 interpScale(double time);
-    glm::quat interpRotation(double time);
+    glm::vec3 LinearInterpPosition(double time);
+    glm::vec3 LinearInterpScale(double time);
+    glm::quat LinearInterpRotation(double time);
 
     double last_time;
     double internal_time;
     bool playing = false;
 
-
 public:
-    double velocity, acceleration;
-    float d0 = 0, d1 = 0;
+    double velocity, tr_acceleration, rot_acceleration;
+    pair<glm::vec3, double> last_position;
+    pair<glm::quat, double> last_rotation;
+    float d0s = 0, d1s = 0;
+    float d0t = 0, d1t = 0;
+    float d0r = 0, d1r = 0;
+
     float dampTime = 2.0f;
 
     // spring constants
-    float m = 1, c = 5;
-    float k = 100;
+    float mt = 1, ct = 5;
+    float kt = 100;
+    float ms = 1, cs = 5;
+    float ks = 100;
+    float mr = 1, cr = 5;
+    float kr = 13;
 
     int tmode = 2, smode = 2, rmode = 2;
 
